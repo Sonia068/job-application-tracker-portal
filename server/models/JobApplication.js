@@ -85,6 +85,21 @@ const JobApplicationSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+
+    // ── Resume / Attachment ────────────────────────────────────
+    resume: {
+      fileName: { type: String, default: '' },
+      filePath: { type: String, default: '' },
+      fileUrl: { type: String, default: '' },
+      fileSize: { type: Number, default: 0 },
+      uploadedAt: { type: Date, default: null },
+    },
+
+    // ── Reminders ──────────────────────────────────────────────
+    reminderSent: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
