@@ -674,6 +674,17 @@ tbody tr:hover { background: var(--bg-elevated); }
   transform: translateY(-1px);
 }
 
+.kanban-card.is-dragging {
+  border-color: var(--accent) !important;
+  opacity: 0.95;
+  cursor: grabbing !important;
+}
+
+.droppable-active {
+  border-color: var(--accent) !important;
+  background: rgba(245, 158, 11, 0.05) !important;
+}
+
 .kc-company { font-size: 13px; font-weight: 600; color: var(--text-primary); }
 .kc-role { font-size: 12px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kc-meta { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }

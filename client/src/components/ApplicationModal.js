@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 
 const STAGES = ['Saved', 'Applied', 'OA', 'Phone Screen', 'Interview', 'Offer', 'Rejected', 'Withdrawn', 'Accepted'];
 const SOURCES = ['LinkedIn', 'Indeed', 'Company Site', 'Referral', 'Naukri', 'Internshala', 'Other'];
@@ -12,6 +12,8 @@ const EMPTY = {
 
 export default function ApplicationModal({ open, onClose, onSave, initial }) {
   const [form, setForm] = useState(EMPTY);
+  const [fileToUpload, setFileToUpload] = useState(null);
+  const [removeExistingResume, setRemoveExistingResume] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -27,6 +29,8 @@ export default function ApplicationModal({ open, onClose, onSave, initial }) {
     } else {
       setForm(EMPTY);
     }
+    setFileToUpload(null);
+    setRemoveExistingResume(false);
   }, [initial, open]);
 
   if (!open) return null;
@@ -36,18 +40,43 @@ export default function ApplicationModal({ open, onClose, onSave, initial }) {
     setForm((f) => ({ ...f, [name]: type === 'checkbox' ? checked : value }));
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size exceeds 5MB limit');
+      e.target.value = '';
+      return;
+    }
+
+    setFileToUpload(file);
+    setRemoveExistingResume(false);
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await onSave({
-        ...form,
-        tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
-      });
+      await onSave(
+        {
+          ...form,
+          tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        },
+        fileToUpload,
+        removeExistingResume
+      );
       onClose();
+    } catch {
+      // Handled in caller
     } finally {
       setSaving(false);
     }
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return '';
+    return `${(bytes / 1024).toFixed(1)} KB`;
   };
 
   return (
@@ -129,6 +158,57 @@ export default function ApplicationModal({ open, onClose, onSave, initial }) {
                   <input type="checkbox" name="priority" checked={form.priority} onChange={handle} style={{ width: 16, height: 16, accentColor: 'var(--accent)' }} />
                   ⭐ Mark as Priority
                 </label>
+              </div>
+
+              {/* Resume / Attachment Field */}
+              <div className="form-group form-full">
+                <label className="form-label">Attached Resume / Documents (.pdf, .doc, .docx · max 5MB)</label>
+                {initial?.resume?.fileName && !removeExistingResume ? (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 12px', background: 'var(--bg-elevated)', borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border)', marginBottom: 8,
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 18 }}>📄</span>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)' }}>{initial.resume.fileName}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{formatFileSize(initial.resume.fileSize)}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <a href={initial.resume.fileUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" style={{ textDecoration: 'none' }}>
+                        View / Download
+                      </a>
+                      <button
+                        type="button"
+                        className="btn btn-ghost btn-sm"
+                        style={{ color: '#ef4444' }}
+                        onClick={() => setRemoveExistingResume(true)}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={handleFileChange}
+                  className="form-input"
+                  style={{ padding: '6px 10px', fontSize: 13 }}
+                />
+                {fileToUpload && (
+                  <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 4 }}>
+                    ✓ Ready to upload: {fileToUpload.name} ({formatFileSize(fileToUpload.size)})
+                  </div>
+                )}
+                {removeExistingResume && (
+                  <div style={{ fontSize: 12, color: '#ef4444', marginTop: 4 }}>
+                    Existing resume will be removed on update.
+                  </div>
+                )}
               </div>
 
               {/* Status note */}
