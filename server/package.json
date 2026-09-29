@@ -2,6 +2,7 @@
   "name": "job-tracker-server",
   "version": "1.0.0",
   "description": "Job Application Tracker - Backend API",
+  "author": "Suma Bhavya (https://github.com/Gunjapalle-Suma-Bhavya)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
